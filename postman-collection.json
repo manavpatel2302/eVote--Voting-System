@@ -1,0 +1,688 @@
+{
+    "info": {
+        "name": "Voting Website API",
+        "description": "Complete API collection for the Voting Website project",
+        "version": "1.0.0",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [{
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        },
+        {
+            "key": "token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "userId",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [{
+            "key": "token",
+            "value": "{{token}}",
+            "type": "string"
+        }]
+    },
+    "item": [{
+            "name": "Health Check",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api/health",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api", "health"]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "API Info",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{baseUrl}}/api",
+                    "host": ["{{baseUrl}}"],
+                    "path": ["api"]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "Authentication",
+            "item": [{
+                    "name": "Register User",
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "if (pm.response.code === 201) {",
+                                "    const response = pm.response.json();",
+                                "    if (response.success) {",
+                                "        pm.test('Registration successful', function () {",
+                                "            pm.expect(response.success).to.be.true;",
+                                "        });",
+                                "    }",
+                                "}"
+                            ]
+                        }
+                    }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123\",\n  \"role\": \"voter\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/register",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "register"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login User",
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "if (pm.response.code === 200) {",
+                                "    const response = pm.response.json();",
+                                "    if (response.success) {",
+                                "        pm.test('Login successful', function () {",
+                                "            pm.expect(response.success).to.be.true;",
+                                "            pm.expect(response.token).to.exist;",
+                                "        });",
+                                "        ",
+                                "        // Store token for other requests",
+                                "        pm.collectionVariables.set('token', response.token);",
+                                "        pm.collectionVariables.set('userId', response.user._id);",
+                                "    }",
+                                "}"
+                            ]
+                        }
+                    }],
+                    "request": {
+                        "method": "POST",
+                        "header": [{
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/login",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "login"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Profile",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/profile",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "profile"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "PUT",
+                        "header": [{
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Updated Doe\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/profile",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "profile"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Forgot Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [{
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john.doe@example.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/forgot-password",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "forgot-password"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reset Password",
+                    "request": {
+                        "method": "POST",
+                        "header": [{
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"token\": \"your-reset-token-here\",\n  \"password\": \"NewPassword123\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/reset-password",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "reset-password"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify Email",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/verify-email/your-verification-token-here",
+                            "host": ["{{baseUrl}}"],
+                            "path": [
+                                "api",
+                                "auth",
+                                "verify-email",
+                                "your-verification-token-here"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/logout",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "auth", "logout"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Voting",
+            "item": [{
+                    "name": "Check Vote Status",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/vote/status",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "vote", "status"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Cast Vote - Candidate 1",
+                    "event": [{
+                        "listen": "test",
+                        "script": {
+                            "exec": [
+                                "if (pm.response.code === 201) {",
+                                "    const response = pm.response.json();",
+                                "    if (response.success) {",
+                                "        pm.test('Vote cast successfully', function () {",
+                                "            pm.expect(response.success).to.be.true;",
+                                "            pm.expect(response.vote).to.exist;",
+                                "        });",
+                                "    }",
+                                "}"
+                            ]
+                        }
+                    }],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "POST",
+                        "header": [{
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"candidate\": \"candidate1\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/vote/cast",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "vote", "cast"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Cast Vote - Candidate 2",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "POST",
+                        "header": [{
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"candidate\": \"candidate2\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/vote/cast",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "vote", "cast"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Cast Vote - Candidate 3",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "POST",
+                        "header": [{
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"candidate\": \"candidate3\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/vote/cast",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "vote", "cast"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Cast Vote - Abstain",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "POST",
+                        "header": [{
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"candidate\": \"abstain\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/vote/cast",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "vote", "cast"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Results",
+            "item": [{
+                    "name": "Get Public Results",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/vote/results/public",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "vote", "results", "public"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Detailed Results (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/vote/results",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "vote", "results"]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Voting Statistics (Admin)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [{
+                                "key": "token",
+                                "value": "{{token}}",
+                                "type": "string"
+                            }]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/vote/stats",
+                            "host": ["{{baseUrl}}"],
+                            "path": ["api", "vote", "stats"]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Test Scenarios",
+            "item": [{
+                    "name": "Complete User Flow",
+                    "item": [{
+                            "name": "1. Register New User",
+                            "request": {
+                                "method": "POST",
+                                "header": [{
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test.user@example.com\",\n  \"password\": \"TestPassword123\",\n  \"role\": \"voter\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/auth/register",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "auth", "register"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "2. Login User",
+                            "event": [{
+                                "listen": "test",
+                                "script": {
+                                    "exec": [
+                                        "if (pm.response.code === 200) {",
+                                        "    const response = pm.response.json();",
+                                        "    if (response.success) {",
+                                        "        pm.collectionVariables.set('token', response.token);",
+                                        "        pm.collectionVariables.set('userId', response.user._id);",
+                                        "    }",
+                                        "}"
+                                    ]
+                                }
+                            }],
+                            "request": {
+                                "method": "POST",
+                                "header": [{
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"email\": \"test.user@example.com\",\n  \"password\": \"TestPassword123\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/auth/login",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "auth", "login"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "3. Check Vote Status",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [{
+                                        "key": "token",
+                                        "value": "{{token}}",
+                                        "type": "string"
+                                    }]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/vote/status",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "vote", "status"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "4. Cast Vote",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [{
+                                        "key": "token",
+                                        "value": "{{token}}",
+                                        "type": "string"
+                                    }]
+                                },
+                                "method": "POST",
+                                "header": [{
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"candidate\": \"candidate1\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/vote/cast",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "vote", "cast"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "5. Check Vote Status Again",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [{
+                                        "key": "token",
+                                        "value": "{{token}}",
+                                        "type": "string"
+                                    }]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/vote/status",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "vote", "status"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "6. View Public Results",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/vote/results/public",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "vote", "results", "public"]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                },
+                {
+                    "name": "Error Testing",
+                    "item": [{
+                            "name": "Invalid Login",
+                            "request": {
+                                "method": "POST",
+                                "header": [{
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"email\": \"invalid@example.com\",\n  \"password\": \"wrongpassword\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/auth/login",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "auth", "login"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Duplicate Vote",
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [{
+                                        "key": "token",
+                                        "value": "{{token}}",
+                                        "type": "string"
+                                    }]
+                                },
+                                "method": "POST",
+                                "header": [{
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"candidate\": \"candidate2\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/vote/cast",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "vote", "cast"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Unauthorized Access",
+                            "request": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{baseUrl}}/api/vote/results",
+                                    "host": ["{{baseUrl}}"],
+                                    "path": ["api", "vote", "results"]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

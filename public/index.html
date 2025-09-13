@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Voting Website - Home</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+
+    <body>
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <h2>🗳️ Voting Website</h2>
+                </div>
+                <div class="nav-menu" id="nav-menu">
+                    <a href="/" class="nav-link active">Home</a>
+                    <a href="/results" class="nav-link">Results</a>
+                    <a href="/login" class="nav-link" id="login-link">Login</a>
+                    <a href="/signup" class="nav-link" id="signup-link">Sign
+                        Up</a>
+                    <a href="#" class="nav-link" id="profile-link"
+                        style="display: none;">Profile</a>
+                    <a href="#" class="nav-link" id="voting-link"
+                        style="display: none;">Vote</a>
+                    <a href="#" class="nav-link" id="logout-link"
+                        style="display: none;">Logout</a>
+                </div>
+                <div class="hamburger" id="hamburger">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <section class="hero">
+                <div class="hero-content">
+                    <h1>Welcome to the Digital Voting Platform</h1>
+                    <p>Secure, transparent, and accessible voting for everyone.
+                        Cast your vote and make your voice heard in the
+                        democratic process.</p>
+                    <div class="hero-buttons">
+                        <a href="/signup" class="btn btn-primary"
+                            id="hero-signup">Get Started</a>
+                        <a href="/results" class="btn btn-secondary">View
+                            Results</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features">
+                <div class="container">
+                    <h2>Why Choose Our Voting Platform?</h2>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🔒</div>
+                            <h3>Secure</h3>
+                            <p>Advanced encryption and security measures ensure
+                                your vote is protected and anonymous.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <h3>Fast</h3>
+                            <p>Cast your vote in seconds from anywhere with an
+                                internet connection.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h3>Transparent</h3>
+                            <p>Real-time results and detailed statistics for
+                                complete transparency.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">👥</div>
+                            <h3>Accessible</h3>
+                            <p>User-friendly interface designed for voters of
+                                all technical abilities.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="candidates">
+                <div class="container">
+                    <h2>Election Candidates</h2>
+                    <div class="candidates-grid">
+                        <div class="candidate-card">
+                            <div class="candidate-avatar">👨‍💼</div>
+                            <h3>John Smith</h3>
+                            <p class="candidate-party">Progressive Party</p>
+                            <p class="candidate-bio">Experienced leader with a
+                                vision for economic growth and social equality.
+                            </p>
+                        </div>
+                        <div class="candidate-card">
+                            <div class="candidate-avatar">👩‍💼</div>
+                            <h3>Sarah Johnson</h3>
+                            <p class="candidate-party">Unity Coalition</p>
+                            <p class="candidate-bio">Dedicated to environmental
+                                protection and sustainable development.</p>
+                        </div>
+                        <div class="candidate-card">
+                            <div class="candidate-avatar">👨‍🎓</div>
+                            <h3>Michael Chen</h3>
+                            <p class="candidate-party">Innovation Alliance</p>
+                            <p class="candidate-bio">Technology advocate focused
+                                on digital transformation and education.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="stats" id="stats-section">
+                <div class="container">
+                    <h2>Election Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-votes">-</div>
+                            <div class="stat-label">Total Votes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="voting-rate">-</div>
+                            <div class="stat-label">Voting Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number"
+                                id="registered-users">-</div>
+                            <div class="stat-label">Registered Users</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h3>Voting Website</h3>
+                        <p>Secure digital voting platform for transparent
+                            elections.
+                        </p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="/login">Login</a></li>
+                            <li><a href="/signup">Sign Up</a></li>
+                            <li><a href="/results">Results</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Support</h4>
+                        <ul>
+                            <li><a href="/forgot-password">Forgot
+                                    Password</a></li>
+                            <li><a
+                                    href="mailto:support@votingwebsite.com">Contact
+                                    Support</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Voting Website | Developed by Manav Patel.
+                        All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+        <script src="script.js"></script>
+    </body>
+
+</html>

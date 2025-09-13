@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - Voting Website</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>🗳️ Voting Website</h2>
+            </div>
+            <div class="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/login" class="nav-link">Login</a>
+                <a href="/signup" class="nav-link">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Email Verification</h1>
+                <p id="verification-message">Verifying your email address...
+                </p>
+            </div>
+
+            <div class="verification-content">
+                <div class="verification-icon" id="verification-icon">
+                    <div class="spinner"></div>
+                </div>
+
+                <div class="verification-message" id="verification-status">
+                    <h3>Please wait...</h3>
+                    <p>We're verifying your email address.</p>
+                </div>
+
+                <div class="verification-actions" id="verification-actions" style="display: none;">
+                    <a href="/login" class="btn btn-primary">Continue to
+                            Login</a>
+                    <a href="/" class="btn btn-secondary">Back to Home</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const verificationIcon = document.getElementById('verification-icon');
+            const verificationStatus = document.getElementById('verification-status');
+            const verificationActions = document.getElementById('verification-actions');
+
+            // Get token from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+
+            if (!token) {
+                showError('Invalid or missing verification token.');
+                return;
+            }
+
+            // Verify email
+            verifyEmail(token);
+
+            async function verifyEmail(token) {
+                try {
+                    const response = await fetch(`/api/auth/verify-email/${token}`, {
+                        method: 'GET'
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showSuccess();
+                    } else {
+                        showError(data.message);
+                    }
+                } catch (error) {
+                    console.error('Email verification error:', error);
+                    showError('An error occurred during verification. Please try again.');
+                }
+            }
+
+            function showSuccess() {
+                verificationIcon.innerHTML = '✅';
+                verificationIcon.className = 'verification-icon success';
+
+                verificationStatus.innerHTML = `
+                    <h3>Email Verified Successfully!</h3>
+                    <p>Your email address has been verified. You can now log in to your account.</p>
+                `;
+
+                verificationActions.style.display = 'block';
+            }
+
+            function showError(message) {
+                verificationIcon.innerHTML = '❌';
+                verificationIcon.className = 'verification-icon error';
+
+                verificationStatus.innerHTML = `
+                    <h3>Verification Failed</h3>
+                    <p>${message}</p>
+                `;
+
+                verificationActions.innerHTML = `
+                    <a href="/signup" class="btn btn-primary">Sign Up Again</a>
+                    <a href="/" class="btn btn-secondary">Back to Home</a>
+                `;
+                verificationActions.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

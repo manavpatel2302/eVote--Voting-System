@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Results - Voting Website</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>🗳️ Voting Website</h2>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/results" class="nav-link active">Results</a>
+                <a href="/login" class="nav-link" id="login-link">Login</a>
+                <a href="/signup" class="nav-link" id="signup-link">Sign
+                        Up</a>
+                <a href="#" class="nav-link" id="profile-link" style="display: none;">Profile</a>
+                <a href="#" class="nav-link" id="voting-link" style="display: none;">Vote</a>
+                <a href="#" class="nav-link" id="logout-link" style="display: none;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="results-container">
+        <div class="results-header">
+            <h1>Election Results</h1>
+            <p>General Election 2024 - Live Results</p>
+            <div class="results-meta">
+                <span class="last-updated">Last updated: <span
+                            id="last-updated">Loading...</span></span>
+                <button id="refresh-btn" class="btn btn-secondary btn-small">Refresh</button>
+            </div>
+        </div>
+
+        <div class="results-content">
+            <div class="results-summary">
+                <div class="summary-card">
+                    <h3>Total Votes</h3>
+                    <div class="summary-number" id="total-votes">-</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Voting Session</h3>
+                    <div class="summary-text" id="voting-session">General Election 2024</div>
+                </div>
+            </div>
+
+            <div class="results-grid" id="results-grid">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                    <p>Loading results...</p>
+                </div>
+            </div>
+
+            <div class="results-chart" id="results-chart" style="display: none;">
+                <h3>Results Visualization</h3>
+                <div class="chart-container">
+                    <canvas id="results-canvas" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-actions">
+            <a href="/" class="btn btn-primary">Back to Home</a>
+            <a href="/voting" class="btn btn-secondary" id="vote-btn" style="display: none;">Cast Your Vote</a>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+                    const token = localStorage.getItem('token');
+                    const user = JSON.parse(localStorage.getItem('user') || '{}');
+                    const resultsGrid = document.getElementById('results-grid');
+                    const totalVotesElement = document.getElementById('total-votes');
+                    const lastUpdatedElement = document.getElementById('last-updated');
+                    const refreshBtn = document.getElementById('refresh-btn');
+                    const voteBtn = document.getElementById('vote-btn');
+
+                    // Update navigation based on auth status
+                    updateNavigation();
+
+                    // Load initial results
+                    loadResults();
+
+                    // Set up refresh functionality
+                    refreshBtn.addEventListener('click', loadResults);
+
+                    // Auto-refresh every 30 seconds
+                    setInterval(loadResults, 30000);
+
+                    async function loadResults() {
+                        try {
+                            const response = await fetch('/api/vote/results/public');
+                            const data = await response.json();
+
+                            if (data.success) {
+                                displayResults(data);
+                                lastUpdatedElement.textContent = new Date(data.generatedAt).toLocaleString();
+                            } else {
+                                showError('Failed to load results');
+                            }
+                        } catch (error) {
+                            console.error('Error loading results:', error);
+                            showError('Error loading results. Please try again.');
+                        }
+                    }
+
+                    function displayResults(data) {
+                        const {
+                            results,
+                            totalVotes
+                        } = data;
+
+                        // Update total votes
+                        totalVotesElement.textContent = totalVotes;
+
+                        // Clear loading spinner
+                        resultsGrid.innerHTML = '';
+
+                        if (results.length === 0) {
+                            resultsGrid.innerHTML = `
+                        <div class="no-results">
+                            <h3>No votes cast yet</h3>
+                            <p>Be the first to cast your vote!</p>
+                        </div>
+                    `;
+                            return;
+                        }
+
+                        // Sort results by count (descending)
+                        const sortedResults = results.sort((a, b) => b.count - a.count);
+
+                        // Display results
+                        sortedResults.forEach((result, index) => {
+                            const resultCard = createResultCard(result, index + 1);
+                            resultsGrid.appendChild(resultCard);
+                        });
+
+                        // Show chart if there are results
+                        if (results.length > 0) {
+                            showChart(results);
+                        }
+                    }
+
+                    function createResultCard(result, position) {
+                        const card = document.createElement('div');
+                        card.className = 'result-card';
+
+                        const candidateName = getCandidateName(result.candidate);
+                        const percentage = parseFloat(result.percentage);
+                        const isWinner = position === 1 && percentage > 0;
+
+                        card.innerHTML = `
+                    <div class="result-position ${isWinner ? 'winner' : ''}">
+                        ${isWinner ? '🏆' : `#${position}`}
+                    </div>
+                    <div class="result-info">
+                        <h3 class="candidate-name">${candidateName}</h3>
+                        <div class="result-stats">
+                            <div class="vote-count">${result.count} votes</div>
+                            <div class="vote-percentage">${result.percentage}%</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                return card;
+            }
+
+            function getCandidateName(candidate) {
+                const names = {
+                    'candidate1': 'John Smith',
+                    'candidate2': 'Sarah Johnson',
+                    'candidate3': 'Michael Chen',
+                    'abstain': 'Abstain'
+                };
+                return names[candidate] || candidate;
+            }
+
+            function showChart(results) {
+                const chartContainer = document.getElementById('results-chart');
+                const canvas = document.getElementById('results-canvas');
+                
+                chartContainer.style.display = 'block';
+                
+                // Simple bar chart
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width;
+                const height = canvas.height;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, width, height);
+                
+                // Chart settings
+                const barWidth = width / results.length * 0.8;
+                const barSpacing = width / results.length * 0.2;
+                const maxVotes = Math.max(...results.map(r => r.count));
+                
+                // Draw bars
+                results.forEach((result, index) => {
+                    const barHeight = (result.count / maxVotes) * (height - 60);
+                    const x = index * (barWidth + barSpacing) + barSpacing / 2;
+                    const y = height - barHeight - 30;
+                    
+                    // Bar color
+                    const colors = ['#4CAF50', '#2196F3', '#FF9800', '#F44336'];
+                    ctx.fillStyle = colors[index % colors.length];
+                    
+                    // Draw bar
+                    ctx.fillRect(x, y, barWidth, barHeight);
+                    
+                    // Draw label
+                    ctx.fillStyle = '#333';
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(getCandidateName(result.candidate), x + barWidth/2, height - 10);
+                    
+                    // Draw value
+                    ctx.fillText(result.count, x + barWidth/2, y - 5);
+                });
+            }
+
+            function showError(message) {
+                resultsGrid.innerHTML = `
+                    <div class="error-message">
+                        <h3>Error</h3>
+                        <p>${message}</p>
+                        <button onclick="location.reload()" class="btn btn-primary">Retry</button>
+                    </div>
+                `;
+            }
+
+            function updateNavigation() {
+                if (token && user) {
+                    // User is logged in
+                    document.getElementById('login-link').style.display = 'none';
+                    document.getElementById('signup-link').style.display = 'none';
+                    document.getElementById('profile-link').style.display = 'inline';
+                    document.getElementById('logout-link').style.display = 'inline';
+                    
+                    // Show vote button if user hasn't voted
+                    checkVoteStatus();
+                } else {
+                    // User is not logged in
+                    document.getElementById('login-link').style.display = 'inline';
+                    document.getElementById('signup-link').style.display = 'inline';
+                    document.getElementById('profile-link').style.display = 'none';
+                    document.getElementById('logout-link').style.display = 'none';
+                    voteBtn.style.display = 'none';
+                }
+            }
+
+            async function checkVoteStatus() {
+                if (!token) return;
+                
+                try {
+                    const response = await fetch('/api/vote/status', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && !data.hasVoted) {
+                        voteBtn.style.display = 'inline';
+                    }
+                } catch (error) {
+                    console.error('Error checking vote status:', error);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

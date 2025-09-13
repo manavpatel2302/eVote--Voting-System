@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Voting Website</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>🗳️ Voting Website - Admin</h2>
+            </div>
+            <div class="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/results" class="nav-link">Public Results</a>
+                <a href="#" class="nav-link" id="logout-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="admin-container">
+        <div class="admin-header">
+            <h1>Admin Dashboard</h1>
+            <p>Manage and monitor the voting system</p>
+        </div>
+
+        <div id="login-required" class="login-required" style="display: none;">
+            <div class="login-message">
+                <h3>Admin Access Required</h3>
+                <p>You need to be logged in as an admin to access this dashboard.
+                </p>
+                <a href="/login" class="btn btn-primary">Login</a>
+            </div>
+        </div>
+
+        <div id="admin-content" class="admin-content" style="display: none;">
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <div class="stat-number" id="total-users">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Verified Users</h3>
+                    <div class="stat-number" id="verified-users">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Votes</h3>
+                    <div class="stat-number" id="total-votes">-</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Voting Rate</h3>
+                    <div class="stat-number" id="voting-rate">-</div>
+                </div>
+            </div>
+
+            <div class="admin-sections">
+                <div class="admin-section">
+                    <h2>Detailed Results</h2>
+                    <div class="section-content">
+                        <div class="results-table-container">
+                            <table class="results-table" id="detailed-results">
+                                <thead>
+                                    <tr>
+                                        <th>Candidate</th>
+                                        <th>Votes</th>
+                                        <th>Percentage</th>
+                                        <th>Voters</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="4" class="loading">Loading results...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-section">
+                    <h2>Recent Votes</h2>
+                    <div class="section-content">
+                        <div class="votes-list" id="recent-votes">
+                            <div class="loading-spinner">
+                                <div class="spinner"></div>
+                                <p>Loading recent votes...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-section">
+                    <h2>Voting Activity (Last 24 Hours)</h2>
+                    <div class="section-content">
+                        <div class="activity-chart">
+                            <canvas id="activity-canvas" width="800" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const loginRequired = document.getElementById('login-required');
+            const adminContent = document.getElementById('admin-content');
+
+            // Check authentication and admin role
+            if (!token || user.role !== 'admin') {
+                loginRequired.style.display = 'block';
+                return;
+            }
+
+            adminContent.style.display = 'block';
+
+            // Load admin data
+            loadAdminStats();
+            loadDetailedResults();
+            loadRecentVotes();
+            loadActivityChart();
+
+            // Set up auto-refresh
+            setInterval(() => {
+                loadAdminStats();
+                loadDetailedResults();
+            }, 30000);
+
+            async function loadAdminStats() {
+                try {
+                    const response = await fetch('/api/vote/stats', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        const stats = data.stats;
+                        document.getElementById('total-users').textContent = stats.totalUsers;
+                        document.getElementById('verified-users').textContent = stats.verifiedUsers;
+                        document.getElementById('total-votes').textContent = stats.totalVotes;
+                        document.getElementById('voting-rate').textContent = stats.votingRate;
+                    }
+                } catch (error) {
+                    console.error('Error loading admin stats:', error);
+                }
+            }
+
+            async function loadDetailedResults() {
+                try {
+                    const response = await fetch('/api/vote/results', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        displayDetailedResults(data.results);
+                    }
+                } catch (error) {
+                    console.error('Error loading detailed results:', error);
+                }
+            }
+
+            function displayDetailedResults(results) {
+                const tbody = document.querySelector('#detailed-results tbody');
+                tbody.innerHTML = '';
+
+                if (results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="no-data">No votes cast yet</td></tr>';
+                    return;
+                }
+
+                results.forEach(result => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${getCandidateName(result.candidate)}</td>
+                        <td>${result.count}</td>
+                        <td>${result.percentage}%</td>
+                        <td>
+                            <button class="btn btn-small" onclick="showVoters('${result.candidate}')">
+                                View ${result.voters.length} voters
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            async function loadRecentVotes() {
+                try {
+                    const response = await fetch('/api/vote/results', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        displayRecentVotes(data.results);
+                    }
+                } catch (error) {
+                    console.error('Error loading recent votes:', error);
+                }
+            }
+
+            function displayRecentVotes(results) {
+                const container = document.getElementById('recent-votes');
+                container.innerHTML = '';
+
+                // Get all votes from all candidates
+                const allVotes = [];
+                results.forEach(result => {
+                    result.voters.forEach(voter => {
+                        allVotes.push({
+                            ...voter,
+                            candidate: result.candidate
+                        });
+                    });
+                });
+
+                // Sort by vote time (most recent first)
+                allVotes.sort((a, b) => new Date(b.votedAt) - new Date(a.votedAt));
+
+                // Display last 10 votes
+                const recentVotes = allVotes.slice(0, 10);
+
+                if (recentVotes.length === 0) {
+                    container.innerHTML = '<p class="no-data">No votes cast yet</p>';
+                    return;
+                }
+
+                recentVotes.forEach(vote => {
+                    const voteItem = document.createElement('div');
+                    voteItem.className = 'vote-item';
+                    voteItem.innerHTML = `
+                        <div class="vote-info">
+                            <strong>${vote.name}</strong> voted for <strong>${getCandidateName(vote.candidate)}</strong>
+                        </div>
+                        <div class="vote-meta">
+                            <span class="vote-time">${new Date(vote.votedAt).toLocaleString()}</span>
+                            <span class="vote-ip">${vote.ipAddress}</span>
+                        </div>
+                    `;
+                    container.appendChild(voteItem);
+                });
+            }
+
+            async function loadActivityChart() {
+                try {
+                    const response = await fetch('/api/vote/stats', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        drawActivityChart(data.stats.votesByHour);
+                    }
+                } catch (error) {
+                    console.error('Error loading activity chart:', error);
+                }
+            }
+
+            function drawActivityChart(votesByHour) {
+                const canvas = document.getElementById('activity-canvas');
+                const ctx = canvas.getContext('2d');
+                const width = canvas.width;
+                const height = canvas.height;
+
+                // Clear canvas
+                ctx.clearRect(0, 0, width, height);
+
+                if (votesByHour.length === 0) {
+                    ctx.fillStyle = '#666';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('No voting activity in the last 24 hours', width / 2, height / 2);
+                    return;
+                }
+
+                // Chart settings
+                const maxVotes = Math.max(...votesByHour.map(v => v.count));
+                const barWidth = width / votesByHour.length * 0.8;
+                const barSpacing = width / votesByHour.length * 0.2;
+
+                // Draw bars
+                votesByHour.forEach((vote, index) => {
+                    const barHeight = (vote.count / maxVotes) * (height - 60);
+                    const x = index * (barWidth + barSpacing) + barSpacing / 2;
+                    const y = height - barHeight - 30;
+
+                    // Bar color
+                    ctx.fillStyle = '#4CAF50';
+                    ctx.fillRect(x, y, barWidth, barHeight);
+
+                    // Draw hour label
+                    ctx.fillStyle = '#333';
+                    ctx.font = '10px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${vote._id.hour}:00`, x + barWidth / 2, height - 10);
+
+                    // Draw vote count
+                    ctx.fillText(vote.count, x + barWidth / 2, y - 5);
+                });
+            }
+
+            function getCandidateName(candidate) {
+                const names = {
+                    'candidate1': 'John Smith',
+                    'candidate2': 'Sarah Johnson',
+                    'candidate3': 'Michael Chen',
+                    'abstain': 'Abstain'
+                };
+                return names[candidate] || candidate;
+            }
+
+            // Global function for showing voters
+            window.showVoters = function(candidate) {
+                // This would open a modal or navigate to a detailed view
+                alert(`Showing voters for ${getCandidateName(candidate)}`);
+            };
+        });
+    </script>
+</body>
+
+</html>

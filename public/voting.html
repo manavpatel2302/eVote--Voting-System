@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cast Your Vote - Voting Website</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>🗳️ Voting Website</h2>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/results" class="nav-link">Results</a>
+                <a href="#" class="nav-link" id="profile-link">Profile</a>
+                <a href="#" class="nav-link" id="logout-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="voting-container">
+        <div class="voting-card">
+            <div class="voting-header">
+                <h1>Cast Your Vote</h1>
+                <p>Select your preferred candidate for the General Election 2024
+                </p>
+            </div>
+
+            <div id="vote-status" class="vote-status" style="display: none;">
+                <div class="status-message">
+                    <h3>You have already voted!</h3>
+                    <p>Thank you for participating in the democratic process.
+                    </p>
+                    <div class="vote-details">
+                        <p><strong>Candidate:</strong> <span id="voted-candidate"></span></p>
+                        <p><strong>Voted on:</strong> <span id="vote-timestamp"></span></p>
+                    </div>
+                    <a href="/results" class="btn btn-secondary">View
+                            Results</a>
+                </div>
+            </div>
+
+            <form id="voting-form" class="voting-form" style="display: none;">
+                <div class="candidates-grid">
+                    <div class="candidate-option">
+                        <input type="radio" id="candidate1" name="candidate" value="candidate1">
+                        <label for="candidate1" class="candidate-label">
+                                <div class="candidate-avatar">👨‍💼</div>
+                                <div class="candidate-info">
+                                    <h3>John Smith</h3>
+                                    <p class="candidate-party">Progressive
+                                        Party</p>
+                                    <p class="candidate-bio">Experienced leader
+                                        with a vision for economic growth and
+                                        social equality.</p>
+                                </div>
+                            </label>
+                    </div>
+
+                    <div class="candidate-option">
+                        <input type="radio" id="candidate2" name="candidate" value="candidate2">
+                        <label for="candidate2" class="candidate-label">
+                                <div class="candidate-avatar">👩‍💼</div>
+                                <div class="candidate-info">
+                                    <h3>Sarah Johnson</h3>
+                                    <p class="candidate-party">Unity
+                                        Coalition</p>
+                                    <p class="candidate-bio">Dedicated to
+                                        environmental protection and sustainable
+                                        development.</p>
+                                </div>
+                            </label>
+                    </div>
+
+                    <div class="candidate-option">
+                        <input type="radio" id="candidate3" name="candidate" value="candidate3">
+                        <label for="candidate3" class="candidate-label">
+                                <div class="candidate-avatar">👨‍🎓</div>
+                                <div class="candidate-info">
+                                    <h3>Michael Chen</h3>
+                                    <p class="candidate-party">Innovation
+                                        Alliance</p>
+                                    <p class="candidate-bio">Technology advocate
+                                        focused on digital transformation and
+                                        education.</p>
+                                </div>
+                            </label>
+                    </div>
+
+                    <div class="candidate-option">
+                        <input type="radio" id="abstain" name="candidate" value="abstain">
+                        <label for="abstain" class="candidate-label">
+                                <div class="candidate-avatar">🚫</div>
+                                <div class="candidate-info">
+                                    <h3>Abstain</h3>
+                                    <p class="candidate-party">No Vote</p>
+                                    <p class="candidate-bio">Choose this option
+                                        if you prefer not to vote for any
+                                        candidate.</p>
+                                </div>
+                            </label>
+                    </div>
+                </div>
+
+                <div class="voting-actions">
+                    <button type="submit" class="btn btn-primary btn-large" id="submit-vote">
+                            <span class="btn-text">Submit Vote</span>
+                            <span class="btn-loading"
+                                style="display: none;">Submitting Vote...</span>
+                        </button>
+                </div>
+
+                <div class="voting-message" id="voting-message"></div>
+            </form>
+
+            <div id="login-required" class="login-required" style="display: none;">
+                <div class="login-message">
+                    <h3>Login Required</h3>
+                    <p>You need to be logged in to cast your vote.</p>
+                    <a href="/login" class="btn btn-primary">Login</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const votingForm = document.getElementById('voting-form');
+            const voteStatus = document.getElementById('vote-status');
+            const loginRequired = document.getElementById('login-required');
+            const submitBtn = document.getElementById('submit-vote');
+            const btnText = document.querySelector('.btn-text');
+            const btnLoading = document.querySelector('.btn-loading');
+            const votingMessage = document.getElementById('voting-message');
+
+            // Check authentication
+            if (!token) {
+                loginRequired.style.display = 'block';
+                return;
+            }
+
+            // Check vote status
+            checkVoteStatus();
+
+            // Handle form submission
+            votingForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(votingForm);
+                const candidate = formData.get('candidate');
+
+                if (!candidate) {
+                    votingMessage.textContent = 'Please select a candidate or abstain.';
+                    votingMessage.className = 'voting-message error';
+                    return;
+                }
+
+                // Show loading state
+                submitBtn.disabled = true;
+                btnText.style.display = 'none';
+                btnLoading.style.display = 'inline';
+
+                try {
+                    const response = await fetch('/api/vote/cast', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            candidate
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        votingMessage.textContent = 'Vote submitted successfully! Thank you for participating.';
+                        votingMessage.className = 'voting-message success';
+
+                        // Hide form and show success message
+                        votingForm.style.display = 'none';
+                        voteStatus.style.display = 'block';
+
+                        // Update vote status display
+                        document.getElementById('voted-candidate').textContent = getCandidateName(candidate);
+                        document.getElementById('vote-timestamp').textContent = new Date(data.vote.timestamp).toLocaleString();
+                    } else {
+                        votingMessage.textContent = data.message;
+                        votingMessage.className = 'voting-message error';
+                    }
+                } catch (error) {
+                    console.error('Voting error:', error);
+                    votingMessage.textContent = 'An error occurred. Please try again.';
+                    votingMessage.className = 'voting-message error';
+                } finally {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    btnText.style.display = 'inline';
+                    btnLoading.style.display = 'none';
+                }
+            });
+
+            async function checkVoteStatus() {
+                try {
+                    const response = await fetch('/api/vote/status', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        if (data.hasVoted) {
+                            // User has already voted
+                            voteStatus.style.display = 'block';
+                            document.getElementById('voted-candidate').textContent = getCandidateName(data.vote.candidate);
+                            document.getElementById('vote-timestamp').textContent = new Date(data.vote.timestamp).toLocaleString();
+                        } else {
+                            // User can vote
+                            votingForm.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking vote status:', error);
+                    votingMessage.textContent = 'Error checking vote status. Please refresh the page.';
+                    votingMessage.className = 'voting-message error';
+                }
+            }
+
+            function getCandidateName(candidate) {
+                const names = {
+                    'candidate1': 'John Smith (Progressive Party)',
+                    'candidate2': 'Sarah Johnson (Unity Coalition)',
+                    'candidate3': 'Michael Chen (Innovation Alliance)',
+                    'abstain': 'Abstain'
+                };
+                return names[candidate] || candidate;
+            }
+        });
+    </script>
+</body>
+
+</html>
