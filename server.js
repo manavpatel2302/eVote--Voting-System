@@ -93,50 +93,67 @@ app.use((error, req, res, next) => {
 });
 
 // Database connection
+let cachedConnection = null;
+
 const connectDB = async() => {
+    if (cachedConnection) {
+        console.log('Using cached database connection');
+        return cachedConnection;
+    }
+
     try {
         const conn = await mongoose.connect(process.env.MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
+        cachedConnection = conn;
+        return conn;
     } catch (error) {
         console.error("Database connection error:", error);
-        process.exit(1);
+        throw error;
     }
 };
 
-// Start server
-const startServer = async() => {
-    await connectDB();
+// Initialize database connection
+connectDB().catch(console.error);
 
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`📱 Frontend: http://localhost:${PORT}`);
-        console.log(`🔗 API: http://localhost:${PORT}/api`);
-        console.log(`📊 Admin: http://localhost:${PORT}/admin`);
+// For Vercel serverless deployment
+if (process.env.NODE_ENV === 'production') {
+    module.exports = app;
+} else {
+    // For local development
+    const startServer = async() => {
+        await connectDB();
+
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`📱 Frontend: http://localhost:${PORT}`);
+            console.log(`🔗 API: http://localhost:${PORT}/api`);
+            console.log(`📊 Admin: http://localhost:${PORT}/admin`);
+        });
+    };
+
+    // Handle unhandled promise rejections
+    process.on("unhandledRejection", (err, promise) => {
+        console.log("Unhandled Promise Rejection:", err.message);
+        process.exit(1);
     });
-};
 
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err, promise) => {
-    console.log("Unhandled Promise Rejection:", err.message);
-    process.exit(1);
-});
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (err) => {
-    console.log("Uncaught Exception:", err.message);
-    process.exit(1);
-});
-
-// Graceful shutdown
-process.on("SIGTERM", () => {
-    console.log("SIGTERM received. Shutting down gracefully...");
-    mongoose.connection.close(() => {
-        console.log("MongoDB connection closed.");
-        process.exit(0);
+    // Handle uncaught exceptions
+    process.on("uncaughtException", (err) => {
+        console.log("Uncaught Exception:", err.message);
+        process.exit(1);
     });
-});
 
-startServer();
+    // Graceful shutdown
+    process.on("SIGTERM", () => {
+        console.log("SIGTERM received. Shutting down gracefully...");
+        mongoose.connection.close(() => {
+            console.log("MongoDB connection closed.");
+            process.exit(0);
+        });
+    });
+
+    startServer();
+}
